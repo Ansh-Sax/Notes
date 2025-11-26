@@ -1,0 +1,522 @@
+
+%%% --------------- DO NOT CHANGE THE FOLLOWING SECTION --------------------
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{pgfplots}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usepackage{pgfplots}
+\usetikzlibrary{arrows.meta,calc,3d}
+\usepackage{fancyhdr}
+\usepackage{multirow, multicol}
+\usepackage{enumitem}
+\usepackage{tabu}
+\usepackage{hyperref}
+\usepackage{dsfont}
+\usepackage{mathrsfs}
+\usepackage{stmaryrd}
+\usepackage{mathtools}
+
+\pgfplotsset{compat=1.17}
+\tdplotsetmaincoords{65}{110}
+
+\newtheorem{defn}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{prop}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corr}{Corollary}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{assmptn}{Assumption}
+\theoremstyle{definition}
+\newtheorem*{notation}{Notation}
+\usepackage{comment}
+\newenvironment{solution}{
+  \textbf{Solution.}}{}
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}\fnsymbol{footnote}}
+
+ \setlength{\headheight}{14.5pt}
+ \addtolength{\topmargin}{-2.5pt}
+
+
+%% ------------------ EXOTIC COMMANDS --------------------------------------
+
+%----------------- Widebar -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%See https://tex.stackexchange.com/questions/16337/can-i-get-a-widebar-without-using-the-mathabx-package?noredirect=1&lq=1
+
+\makeatletter
+\let\save@mathaccent\mathaccent
+\newcommand*\if@single[3]{%
+  \setbox0\hbox{${\mathaccent"0362{#1}}^H$}%
+  \setbox2\hbox{${\mathaccent"0362{\kern0pt#1}}^H$}%
+  \ifdim\ht0=\ht2 #3\else #2\fi
+  }
+%The bar will be moved to the right by a half of \macc@kerna, which is computed by amsmath:
+\newcommand*\rel@kern[1]{\kern#1\dimexpr\macc@kerna}
+%If there's a superscript following the bar, then no negative kern may follow the bar;
+%an additional {} makes sure that the superscript is high enough in this case:
+\newcommand*\widebar[1]{\@ifnextchar^{{\wide@bar{#1}{0}}}{\wide@bar{#1}{1}}}
+%Use a separate algorithm for single symbols:
+\newcommand*\wide@bar[2]{\if@single{#1}{\wide@bar@{#1}{#2}{1}}{\wide@bar@{#1}{#2}{2}}}
+\newcommand*\wide@bar@[3]{%
+  \begingroup
+  \def\mathaccent##1##2{%
+%Enable nesting of accents:
+    \let\mathaccent\save@mathaccent
+%If there's more than a single symbol, use the first character instead (see below):
+    \if#32 \let\macc@nucleus\first@char \fi
+%Determine the italic correction:
+    \setbox\z@\hbox{$\macc@style{\macc@nucleus}_{}$}%
+    \setbox\tw@\hbox{$\macc@style{\macc@nucleus}{}_{}$}%
+    \dimen@\wd\tw@
+    \advance\dimen@-\wd\z@
+%Now \dimen@ is the italic correction of the symbol.
+    \divide\dimen@ 3
+    \@tempdima\wd\tw@
+    \advance\@tempdima-\scriptspace
+%Now \@tempdima is the width of the symbol.
+    \divide\@tempdima 10
+    \advance\dimen@-\@tempdima
+%Now \dimen@ = (italic correction / 3) - (Breite / 10)
+    \ifdim\dimen@>\z@ \dimen@0pt\fi
+%The bar will be shortened in the case \dimen@<0 !
+    \rel@kern{0.6}\kern-\dimen@
+    \if#31
+      \overline{\rel@kern{-0.6}\kern\dimen@\macc@nucleus\rel@kern{0.4}\kern\dimen@}%
+      \advance\dimen@0.4\dimexpr\macc@kerna
+%Place the combined final kern (-\dimen@) if it is >0 or if a superscript follows:
+      \let\final@kern#2%
+      \ifdim\dimen@<\z@ \let\final@kern1\fi
+      \if\final@kern1 \kern-\dimen@\fi
+    \else
+      \overline{\rel@kern{-0.6}\kern\dimen@#1}%
+    \fi
+  }%
+  \macc@depth\@ne
+  \let\math@bgroup\@empty \let\math@egroup\macc@set@skewchar
+  \mathsurround\z@ \frozen@everymath{\mathgroup\macc@group\relax}%
+  \macc@set@skewchar\relax
+  \let\mathaccentV\macc@nested@a
+%The following initialises \macc@kerna and calls \mathaccent:
+  \if#31
+    \macc@nested@a\relax111{#1}%
+  \else
+%If the argument consists of more than one symbol, and if the first token is
+%a letter, use that letter for the computations:
+    \def\gobble@till@marker##1\endmarker{}%
+    \futurelet\first@char\gobble@till@marker#1\endmarker
+    \ifcat\noexpand\first@char A\else
+      \def\first@char{}%
+    \fi
+    \macc@nested@a\relax111{\first@char}%
+  \fi
+  \endgroup
+}
+\makeatother
+\newcommand\test[1]{%
+$#1{M}$ $#1{A}$ $#1{g}$ $#1{\beta}$ $#1{\mathcal A}^q$
+$#1{AB}^\sigma$ $#1{H}^C$ $#1{\sin z}$ $#1{W}_n$}
+
+
+%------------------------ Laplace Transform --------------------------------
+%See https://tex.stackexchange.com/questions/239791/is-this-laplace-transform-symbol-available-in-latex
+
+\newsavebox\foobox
+\newlength{\foodim}
+\newcommand{\slantbox}[2][0]{\mbox{%
+        \sbox{\foobox}{#2}%
+        \foodim=#1\wd\foobox
+        \hskip \wd\foobox
+        \hskip -0.5\foodim
+        \pdfsave
+        \pdfsetmatrix{1 0 #1 1}%
+        \llap{\usebox{\foobox}}%
+        \pdfrestore
+        \hskip 0.5\foodim
+}}
+\def\Ell{\slantbox[-.45]{$\mathscr{L}$}}
+
+%% -------------------------------------------------------------------------
+
+%% ------------------------ FORMAT -----------------------------------------
+
+\parindent 0pt
+\parskip 10pt
+
+\setcounter{section}{-1}
+\pagestyle{fancy}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    }
+    
+% Title
+    \title{Yang-Mills Learning Seminar: Shen-Zhu-Zhu '22, Part II}
+    \date{October 17, 2025}
+    \author{Ansh S.}
+
+% \fancyhead[RO]{MATH-UA 377 Fall 2022}
+\fancyhead[RO]{Shen-Zhu-Zhu ’22, Part II}
+\fancyhead[LO]{Yang-Mills Learning Seminar}
+\newenvironment{problems}
+{\begin{enumerate}[itemsep=30pt]}
+  {\end{enumerate}}
+\newenvironment{parts}
+{\begin{enumerate}[topsep=10pt,itemsep=20pt,label*=\arabic*.]}
+  {\end{enumerate}}
+
+
+\begin{document}
+\maketitle
+
+%% -------------------------------------------------------------------------
+
+%%% -------END OF SECTION THAT MUST BE LEFT UNCHANGED ----------------------
+
+
+%%% ------------------- SHORTCUTS ------------------------------------------
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\Rtilde}{\widetilde{\R}}
+\newcommand{\Rvec}{\widehat{\R}}
+\newcommand{\id}{\mathds{1}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\power}{\mathcal{P}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\schwartz}{\mathcal{S}}
+\newcommand{\dynkin}{\mathcal{D}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\cl}{\mathcal{C}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\g}{\mathfrak{g}}
+\newcommand{\no}{\textbf}
+\newcommand{\problem}[1]{\textbf{Problem #1}}
+
+\newcommand{\p}{\mathbb{P}}
+\newcommand{\e}{\mathbb{E}}
+\newcommand{\var}{\operatorname{Var}}
+\newcommand{\cov}{\operatorname{Cov}}
+
+\newcommand{\proj}{\operatorname{proj}}
+\newcommand{\im}{\operatorname{im}}
+\newcommand{\tr}{\operatorname{Tr}}
+\newcommand{\ric}{\operatorname{Ric}}
+\newcommand{\hess}{\operatorname{Hess}}
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+%\overset{(d)}{\longrightarrow}
+
+%%% ------------------------------------------------------------------------
+
+\section{Summary}
+
+We continue working through \cite{Shen_2022}. In these notes we basically see the following (strict subset of section 4.1 in the original paper):
+\begin{align*}
+    \text{Estimate on Hessian (Lemma \ref{lemma:hess}) }&\implies \text{Bakry-\'Emery condition \eqref{eq:condition} is satisfied}\\
+    &\iff \text{Temporal mixing under Langevin dynamics (Theorem \ref{thm:implications})}\\
+    &\implies \text{Log-Sobolev inequality (Theorem \ref{thm:inequalities})}\\
+    &\implies \text{Decay of correlations and other niceties.}
+\end{align*}
+The last implication will be covered in Ron's talk on October 24, 2025.
+
+\section{Review}
+
+Let $\Lambda_L=\Z^d\cap L\T^d;\, d>1$ be a finite $d$-dimensional lattice with side length $L$ and unit lattice spacing.
+\begin{align*}
+    E_L^+:&= \{+\text{vely oriented edges} \}\\
+    G&= SO(N) \text{ or } SU(N)\\
+    \power_L^+:&=\{ +\text{vely oriented plaquettes} \}.
+\end{align*}
+We assign a group element $Q_e\in G$ to each edge $e\in E_L^+$, and extend to all edges by requiring that $Q_{e^{-1}}=Q_e^{-1}=Q_{e}^*$ (for the groups under consideration) where $e\in E_L^+$ and $e^{-1}$ is the same edge but in negative orientation.
+The lattice Yang-Mills measure now is a probability measure on the space of such configurations
+$\mu_{L,N,\beta}\in\M^1(G^{E_L^+})$, given by
+\begin{align}\label{eq:ym}
+    d\mu_{L,N,\beta}(Q)=\frac{1}{Z_{L,N,\beta}}\exp(\schwartz(Q)) \,d\sigma_N(Q)
+\end{align}
+where $\sigma_N$ is the Haar measure on the product group $G^{E_L^+}$ and
+\begin{align}\label{eq:action}
+    \schwartz(Q):=N\beta\Re\sum_{p\in\power_L^+}\tr(Q_p)
+\end{align}
+where $Q_p=Q_{e_1}Q_{e_2}Q_{e_3}^*Q_{e_4}^*$ if $e_1,e_2,e_3,e_4\in E_L^+$ appear in $p\in \power_L^+$ in that order. Usually there is no $N$ in the action, it being there is telling us we can take the inverse temperature to scale like a constant times $N$. This is the t'Hooft scaling -- more on this later.
+
+Here's what Kunal talked about in his talk:
+
+\begin{enumerate}
+    \item We have global well-posedness of the following SDE (Langevin dynamics) on the configuration space:
+        \begin{align}\label{eq:sde}
+            dQ=\nabla \schwartz(Q)\,dt + \sqrt 2 \,d\mathfrak{B}
+        \end{align}
+        where $\mathfrak{B}=(\mathfrak{B}_e)_{e\in E_L^+}$ are independent brownian motions on $G$. $d\mathfrak{B}$ can be seen as the white noise w.r.t. the inner product on $T_Q G^{E_L^+}$ which will be recalled in the next section.
+    \item By global well-posedness above, the solutions form a Markov process in $G^{E_L^+}$. Let the associated semigroup be $(P_t^L)_{t\geq 0}$,
+        i.e. $\forall f\in C^\infty (G^{E_L^+}\rightarrow\R)$, $P_t^Lf(x)=\e[f(Q(t,x))]$ where $Q(t,x)$ denotes the solution at time $t$ to \eqref{eq:sde} starting from initial data $x$.
+    \item \eqref{eq:ym} is invariant under \eqref{eq:sde}. That is, for any $f\in C^\infty(G^{E_L^+}\rightarrow\R)$ we have that
+        \begin{align}\label{eq:invariance}
+            \int P_t^L f(x)\,d\mu_{L,N,\beta}(x)=\int f(x) \,d\mu_{L,N,\beta}(x).
+        \end{align}
+\end{enumerate}
+
+\section{On to the results}
+
+Let the lie algebra associated with $G$ be $\mathfrak{g}$, which we can view as a  subset of $M_{N\times N}(\C)$ and endow with the Hilbert-Schmidt inner product given by $\Re\tr(XY^*)$.
+This inner product on $\mathfrak{g}=T_{I_N}G$ can be used to induce an inner product on every tangent space $T_Q G$ using the group structure of $G$. This Riemannian metric is bi-invariant.
+Now we can decompose the tangent space $T_Q G^{E_L^+}=\oplus_{e\in G^{E_L^+}} T_{Q_e}G$, and get a Riemannian metric on $G^{E_L^+}$.
+
+Accordingly, we use the distance from the Riemannian metric on $G$ to induce a distance on the space of configurations $G^{E_L^+}$ by
+\begin{align*}
+    \rho_L(Q,Q')^2:= \sum_{e\in E_L^+} \rho(Q_e,Q_e')^2;\,\, Q,Q'\in G^{E_L^+}
+\end{align*}
+where $\rho$ is the distance on $G$.
+
+We also define the Wasserstein distance on $\M^1(G^{E_L^+})$ by
+\begin{align*}
+    W_{L,p}(\mu,\nu):= \inf_{\pi\in\cl(\mu,\nu)} \left( \int_{G^{E_L^+}\times G^{E_L^+}} |\rho_L(x,y)|^p \,d\pi(x,y) \right)^{1/p}
+    ;\,\, \mu,\nu\in \M^1(G^{E_L^+})
+\end{align*}
+where $\cl(\mu,\nu)$ is the set of couplings between $\mu$ and $\nu$ -- that is, $\pi\in\M^1(G^{E_L^+}\times G^{E_L^+})$ such that it has $\mu$ and $\nu$ as its marginals.
+This means that $\pi$ restricted to the first entry is $\mu$, and restricted to the second entry it is $\nu$.
+
+A final piece of notation: for $\nu\in\M^1(G^{E_L^+})$, we define $\nu P_t^L\in M^1(G^{E_L^+})$ to be the measure such that
+\begin{align*}
+    \forall f\in C^{\infty}(G^{E_L^+}), \int f(x)\,d\nu P_t(x)=\int P_t f(x)\,d\nu.
+\end{align*}
+The way to interpret this is that the Markov semigroup $(P_t)_{t\geq 0}$ acts dually on $\M^1(G^{E_L^+})$.
+
+We now state the main results we will discuss today.
+
+\begin{theorem}\label{thm:implications}
+$K_\schwartz=K_{\schwartz}(N,\beta)$ is a constant described below. For any $N,\beta$, the following is true:
+    \begin{enumerate}
+        \item The dynamic defined by \eqref{eq:sde} is exponentially ergodic in the sense that
+            \begin{align}\label{eq:11}
+                W_{L,2}(\delta_x P_t^L, \delta_{y} P_t^L )\leq e^{-K_\schwartz t}\rho_L(Q,Q');\,\, t\geq 0, x,y\in G^{E_L^+}.
+            \end{align}
+        \item For $1<p<2$,
+            \begin{align}\label{eq:12}
+                W_{L,p}(\mu P_t^L, \nu P_t^L)\leq e^{-K_\schwartz t} W_{L,p}(\mu,\nu) ;\,\, t\geq 0, \mu,\nu\in \M^1(G^{E_L^+}),
+            \end{align}
+            which in particular implies uniqueness of the invariant measure when $K_\schwartz >0$.
+        \item $\forall f\in C^\infty(G^{E_L^+}\rightarrow\R)$,
+            \begin{align}\label{eq:6}
+                P_t^L(f^2\log f^2)-(P_t^L f^2)\log (P_t^L f^2)\leq \frac{2(1-e^{-2K_\schwartz t})}{K_\schwartz}P_t^L|\nabla f|^2,
+            \end{align}
+            which we will use to prove the log-Sobolev inequality below.
+    \end{enumerate}
+\end{theorem}
+Above,
+\begin{align}\label{eq:K}
+        K_\schwartz =
+        \begin{cases}
+            \frac{N+2}{4}-1-8N|\beta|(d-1);\, G=SO(N)\\
+            \frac{N+2}{2}-1-8N|\beta|(d-1);\, G=SU(N)
+        \end{cases}.
+\end{align}
+
+In order to have decay in time, we will make the following assumption:
+\begin{assmptn}\label{assmptn:small}
+    Suppose that $K_\schwartz>0$, which is equivalent to the following strong coupling assumption:
+    \begin{align*}
+        |\beta|<
+        \begin{cases}
+            \frac{1}{32(d-1)}-\frac{16}{N(d-1)} &;\, G=SO(N)\\
+            \frac{1}{16(d-1)} &;\, G=SU(N)
+        \end{cases}.
+    \end{align*}
+\end{assmptn}
+
+Under this assumption, in particular, we obtain that the invariant measure of $(P_t^L)_{t\geq 0}$ is unique. Indeed, if $\mu$ is an invariant measure then $\mu P_t^L$ satisfies $\int f\,d\mu P_t^L=\int P_t^L f \,d\mu=\int f\,d\mu$ and hence $\mu P_t^L=\mu$. If we had two invariant measures $\mu$ and $\nu$, then we'd get $W_{L,p}(\mu,\nu)=W_{L,p}(\mu P_t^L, \nu P_t^L)\leq e^{-K_\schwartz t}W_{L,p}(\mu,\nu)\rightarrow 0$ as $t\rightarrow\infty$ using \eqref{eq:12}. In Kunal's talk we saw that $\mu_{L,N,\beta}$ is unique under the dynamics $(P_t^L)_{t\geq 0}$. The above shows that it is the unique invariant measure as long as the inverse temperature is less than $N$ times some small constant.
+
+The following proposition reduces Theorem \ref{thm:implications} to checking a condition.
+
+\begin{prop}
+Each assertion of Theorem \ref{thm:implications} and the following {\it Bakry-\'Emery condition} are all equivalent: for every $v\in T_QG^{E_L^+}$ at any $Q$,
+\begin{align}\label{eq:condition}
+    \ric(v,v)-\hess_\schwartz(v,v)\geq K_\schwartz|v|^2.
+\end{align}    
+\end{prop}
+\begin{proof}
+    For the full proof see \cite[Theorem 5.6.1 (1), (11), (12), (6)]{WAN06}. Here, we will only prove that \eqref{eq:condition}$\implies$\eqref{eq:11} in a flat space.\\
+
+    Let the configuration space be $\R^n$. Suppose $S:\R^n\rightarrow\R$ satisfies \eqref{eq:condition}, and consider the following SDE on $\R^n$:
+    \begin{align*}
+        dq=\nabla S(q)+\sqrt2\,dB
+    \end{align*}
+    where $B$ is just the standard brownian motion on $\R^n$. The Bakry-\'Emery condition then tells us that
+    \begin{align*}
+        -\nabla^2 S\geq K
+    \end{align*}
+    which consequently gives us an estimate on $(\nabla S(x)-\nabla S(y))\cdot(x-y)$ as follows:
+    \begin{align*}
+        \nabla S(x)-\nabla S(y)&=\int_0^1 \nabla^2 S(\gamma(t))(x-y)\,dt
+        \intertext{and hence}
+        (\nabla S(x)-\nabla S(y))\cdot(x-y)&\leq \int_0^1 (x-y)^T \nabla^2 S(\gamma(t))(x-y)\,dt\\
+        &\leq -K |x-y|^2.
+    \end{align*}
+    Next, couple $q(t,x)$ and $q(t,y)$ with the same Brownian motion. That is, suppose that they are solutions to the above SDE at time $t$ starting with data $x$ and $y$ respectively, driven by the same Brownian motion. Then the difference $q(t,x)-q(t,y)$ actually satisfies an ODE. We get,
+    \begin{align*}
+        \frac{d}{dt}|q(t,x)-q(t,y)|^2&=2(\nabla S(q(t,x))-\nabla S(q(t,y))\cdot (q(t,x)-q(t,y))\\
+        &\leq -2K |q(t,x)-q(t,y)|^2.
+        \intertext{Gronwall's inequality now implies}
+        |q(t,x)-q(t,y)|^2&\leq e^{-2Kt}|x-y|^2
+    \end{align*}
+    which implies the result for the particular coupling used above. Minimizing over all couplings readily gives \eqref{eq:11}.
+\end{proof}
+
+I again want to emphasize that the assertions in Theorem \ref{thm:implications} are equivalent to the Bakry-\'Emery condition \eqref{eq:condition} regardless of the value of $K_\schwartz$. Of course, these assertions are only useful for us under Assumption \ref{assmptn:small}.
+Under this assumption we obtain the Log-Sobolev inequality, which uses the temporal mixing seen in Theorem \ref{thm:implications} to get spatial mixing.
+
+\begin{theorem}(Log-Sobolev inequality)\label{thm:inequalities}
+For any $F:G^{E_L^+}\rightarrow\R$, let $\mu_{L,N,\beta}(F):=\int f(x)\,d\mu_{L,N,\beta}(x)$. Then for any $f\in C^\infty( G^{E_L^+}\rightarrow\R )$, under Assumption \ref{assmptn:small} we have
+    \begin{align}\label{eq:lsi}
+        \mu_{L,N,\beta}(f^2\log f^2) \leq \frac{2}{K_\schwartz}\mu_{L,N,\beta}(|\nabla f|^2) + \mu(f^2)\log\mu(f^2).
+    \end{align}
+\end{theorem}
+\begin{proof}
+From \eqref{eq:6} we have that
+    \begin{align}
+        P_t^L(f^2\log f^2)&\leq \frac{2(1-e^{-2K_\schwartz t})}{K_\schwartz}P_t^L|\nabla f|^2 + (P_t^L f^2)\log(P_t^L f^2).
+        \intertext{taking integral w.r.t. $\mu_{L,N,\beta}$ on both sides and using invariance of measure \eqref{eq:invariance} gives}
+        \mu_{L,N,\beta}(f^2\log f^2)&\leq \frac{2(1-e^{-2K_\schwartz t})}{K_\schwartz}\mu_{L,N,\beta}(|\nabla f|^2)+\mu_{L,N,\beta}( (P_t^L f^2)\log(P_t^L f^2)).
+        \intertext{Intuitively, the Bakry-\'Emery condition is saying that there is a spectral gap in the spectrum of the generator of our semigroup. Therefore any deviation from the equilibrium of the sort $P_t^LF-\mu(F)$ should decay exponentially in time in the $L^2$ sense. That is, $P_t^L F\rightarrow \mu(F)$ in $L^2(\mu_{L,N,\beta})$, using which we get}
+        &\rightarrow \frac{2}{K_\schwartz}\mu_{L,N,\beta}(|\nabla f|^2)+\mu_{N,L,\beta}(f^2)\log\mu(f^2).
+    \end{align}
+\end{proof}
+
+The reason we care about the Log-Sobolev inequality is that by choosing $f$ judiciously we can obtain things like decay of correlations. Note that we trivially have decay of correlations when $\beta=0$ in the original action without the t'Hooft scaling.
+It gets harder to show this the larger we take the inverse temperature to be, and that's what's impressive about this result: we can show decay of correlations even when the inverse temperature is increasing linearly with $N$ (times some small constant).
+
+Remember that the Log-Sobolev inequality is implied by satisfying the Bakry-\'Emery condition as long as the inverse temperature is less than some function of $N$. It is then interesting to ask if we can get Log-Sobolev without satisfying the condition, to perhaps get things like decay of correlation for all values of the inverse temperature.
+
+Anyhow, we now show that the Bakry-\'Emery condition is satisfied. This follows from the following two lemmas and the definition of $K_\schwartz$ in \eqref{eq:K}.
+
+\begin{lemma}\label{lemma:ricci}
+    For any tangent vector $u\in G$ we have
+    \begin{align*}
+        \ric(u,u)=\left( \frac{\alpha(N+2)}{4}-1 \right)|u|^2.
+    \end{align*}
+\end{lemma}
+\begin{proof}
+Instead of a proof, we give an intuitive argument on why the Ricci curvature scales linearly with $N$. Our Riemannian metric is invariant under the adjoint action. For such metrics, the Ricci curvature is given by
+\begin{align*}
+    \ric[X,X]=\frac{1}{4} \sum_{i}|[X,E_i] |^2
+\end{align*}
+where the sum is over the orthonormal basis of $\mathfrak{g}$. When $\mathfrak{g}=\mathfrak{so}(N)$, $X$ gives the infinitesimal rotation in some plane.
+The question then, is how many other planes is this rotation witnessed in? It'll be precisely these planes which will fail to commute with $X$. If $X=E_{jk}$, then the planes will be those containing either $j$ or $k$ -- which will be $N-2$ many. Hence the linear scaling!
+\end{proof}
+
+\begin{lemma}\label{lemma:hess}
+    For $v\in T_Q G^{E_L^+}$ at any point $Q$ we have
+    \begin{align*}
+        |\hess_\schwartz(v,v)|\leq 8(d-1)N|\beta||v|^2.
+    \end{align*}
+\end{lemma}
+
+Before proceeding with the proof of this lemma, we note that $K_\schwartz$ is simply the difference between $\ric$ and the above estimate on $\hess_S$. The computation of the Ricci curvature is exact: it grows linearly. If we had a worse than linear estimate on the Hessian, then $K_\schwartz$ would no longer be positive for every $N$ regardless of how small we chose $\beta$ to be.
+Na\"ively, we'd expect the Hessian to be of the order $N^2$: suppose the trace is $O(N)$, and then there is an $N$ on the outside from the definition of the Hessian -- but this is too big! The novel contribution in \cite{Shen_2022} is precisely Lemma \ref{lemma:hess}. The better estimates we can get on the Hessian, the larger we can take our inverse temperature to be and, for example, still get decay of correlations.
+
+\begin{proof}
+
+Let $v,w\in T_Q G^{E_L^+}$ and $X$ and $Y$ be vector fields $G^{E_L^+}\rightarrow T G^{E_L^+}$ such that $X(Q)=v$ and $Y(Q)=w$. Then the hessian is given by
+\begin{align*}
+    \hess_\schwartz (v,w)&=X(Y(S))-(\nabla_X Y)(S).
+\end{align*}
+The LHS is a tensor field and only depends on the vectors at $Q$, but the individual objects on the RHS by themselves aren't and can depend on the vector field locally around $Q$.
+This means that we can choose vector fields conveniently to make the computation of the RHS simpler, and our choice won't affect the LHS that we want to estimate!
+To this end, we will consider a right-invariant vector field. For $v\in T_Q G^{E_L^+}$ recall that we can write $v=XQ$ where $X\in\g$. Then, we construct our right-invariant vector field $\tilde X$ by assigning the vector $\tilde X(Q')=XQ'$ at every point $Q'\in G^{E_L^+}$. For such vector fields, the Levi-Civita connection is quite simple:
+\begin{align*}
+    \nabla_{\tilde X}\tilde Y=\frac{1}{2}[\tilde X,\tilde Y].
+\end{align*}
+And thus, the second term in the hessian that we want to compute vanishes:
+\begin{align*}
+    \nabla_{\tilde X} \tilde X = \frac{1}{2}[\tilde X, \tilde X]=0.
+\end{align*}
+Also note that due to the decomposition of tangent space we have
+\begin{align}\label{eq:decomposition}
+    v = XQ = \sum_{e\in E_L^+} X_e Q_e
+\end{align}
+and thus
+\begin{align}
+    \hess_\schwartz(v,v)&= \tilde X(\tilde X(S)) \notag\\
+    &=\sum_{e,\widebar e} (X_{\widebar e} Q_{\widebar e})(X_eQ_e) S. \label{eq:H1}
+\end{align}
+Here we first try to compute $X_e Q_e(S)$. This should be the derivative of $S$ in the direction of $X_eQ_e$. This is computed by considering a curve $\gamma:[0,1]\rightarrow G$ such that $\gamma(0)=Q_e$ and the derivative of the curve at $t=0$ is the vector $XQ$. This curve is $e^{tX_{e}}Q_e$. Thus, supposing $Q_p=Q_{e_1}Q_{e_2}Q_{e_3}^*Q_{e_4}^*$ and that $e=e_3$ we get
+\begin{align*}
+    X_{e_3}Q_{e_3}(Q_p)&= Q_{e_1} Q_{e_2} (X_{e_3}Q_{e_3})Q_{e_3}^* Q_{e_4}^*\\
+    &= Q_{e_1}Q_{e_2} \frac{d}{dt}(\exp(t X_{e_3})Q_{e_3})^* Q_{e_4}^*\\
+    &=Q_{e_1}Q_{e_2}Q_{e_3}^* X_{e_3}^* Q_{e_4}^*.
+\end{align*}
+Next, we want to compute $(X_{\widebar e}Q_{\widebar e})(X_eQ_e) Q_p$. This leads to two cases:
+
+\underline{Case 1:} $e=\widebar e$. Let $\widebar e=e=e_3$ in the above computation. Then,
+\begin{align*}
+    (X_{e_3}Q_{e_3})(X_{e_3}Q_{e_3}) Q_p&= (X_{e_3}Q_{e_3}) Q_{e_1}Q_{e_2}Q_{e_3}^*X_{e_3}*Q_{e_4}^*\\
+    &= Q_{e_1}Q_{e_2}Q_{e_3}^* (X_{e_3}^*)^2 Q_{e_4}.
+\end{align*}
+We now estimate the trace:
+\begin{align*}
+    |(X_{e_3}Q_{e_3})(X_{e_3}Q_{e_3}) \Re\tr(Q_p)|&\leq |\tr (Q_{e_1}Q_{e_2}Q_{e_3}^* (X_{e_3}^*)^2 Q_{e_4})|,
+    \intertext{using the cyclic invariance of the trace}
+    &\leq |\tr(X_{e_3}^* (Q_{e_3}Q_{e_2}^*Q_{e_1}^*Q_{e_4} X_{e_3})^*)|
+    \intertext{writing $Q'=I_N$, $Q''=Q_{e_3}Q_{e_2}^*Q_{e_1}^*Q_{e_4}$, and using Cauchy-Schwarz for the Hilbert-Schmidt inner product gives}
+    &\leq (\tr( Q'X_{e_3}(Q'X_{e_3})^* )^{1/2} (\tr( Q''X_{e_3}(Q''X_{e_3})^* )^{1/2}
+    \intertext{which using the bi-invariance of the metric is just}
+    &=|X_{e_3}|^2.
+\end{align*}
+The contribution from these diagonal terms to the Hessian will thus be bounded by
+\begin{align}
+    N|\beta|\sum_{e=\widebar e\in E_L^+}\sum_{p\in\power_L^+} |X_e|^2\id_{e\in p}&=N|\beta|\sum_{e\in E_L^+} |X_e|^2\sum_{p\in P_L^+}\id_{e\in p}, \notag
+    \intertext{there will be $2(d-1)$ such plaquettes containing some fixed edge $e$, and so}
+    &=2N|\beta|(d-1)\sum_{e\in E_L^+}|X_e|^2 \notag
+    \intertext{which using \eqref{eq:decomposition} is just}
+    &=2N|\beta|(d-1)|v|^2. \label{eq:H2}
+\end{align}
+
+\underline{Case 2:} $e\neq \widebar e$. Let's say $\widebar e=e_1$ in the original computation. Then
+\begin{align*}
+    (X_{e_1}Q_{e_1})(X_{e_3}Q_{e_3})Q_p&=(X_{e_1}Q_{e_1}) Q_{e_1}Q_{e_2}Q_{e_3}^*X_{e_3}*Q_{e_4}^*\\
+    &=X_{e_1}Q_{e_1}Q_{e_2}Q_{e_3}^*X_{e_3}^*Q_{e_4}
+    \intertext{and the trace as before can be bounded by}
+    |(X_{e_1}Q_{e_1})(X_{e_3}Q_{e_3}) \Re\tr(Q_p)|&|\tr( X_{e_1}Q_{e_1}Q_{e_2}Q_{e_3}^* (Q_{e_4}X_{e_3})^* ),
+    \intertext{setting $Q'=Q_{e_1}Q_{e_2}Q_{e_3}^*$ and $Q''=Q_{e_4}$ gives}
+    &\leq (\tr( X_{e_1}Q'(X_{e_1}Q')^* )^{1/2} (\tr( Q''X_{e_3}(Q''X_{e_3})^* )^{1/2}\\
+    &=|X_{e_1}||X_{e_3}|
+    \intertext{which using AM-GM inequality is}
+    &\leq \frac{|X_{e_1}|^2+|X_{e_3}|^2}{2}.
+\end{align*}
+Other non-diagonal terms can be estimated in a similar way. The contribution from these terms to the Hessian can now be bounded by
+\begin{align}
+    N|\beta|\sum_{e\neq \widebar e\in E_L^+}\sum_{p\in \power_L^+}\frac{|X_e|^2+|X_{\widebar e}|^2}{2}\id_{e,\widebar e\in p}&=N|\beta|\sum_{e\neq \widebar e\in E_L^+}\sum_{p\in P_L^+} |X_e|^2\id_{e\in p}\id_{\widebar e\in p} \notag\\
+    &=N|\beta|\sum_{e\in E_L^+} |X_e|^2\sum_{p\in \power_L^+}\id_{e\in p}\sum_{\substack{ \widebar e\in E_L^+ \\ \widebar e\neq e }} \id_{\widebar e\in p} \notag
+    \intertext{where for a fixed edge $e$ and plaquette $p\ni e$, there are only three choices for $\widebar e\in p$ such that $\widebar e\neq e$. Thus}
+    &=3N|\beta|\sum_{e\in E_L^+}|X_e|^2\sum_{p\in\power_L^+}\id_{\widebar e\in p} \notag\\
+    &=6N|\beta|(d-1)\sum_{e\in E_L^+}|X_e|^2 \notag\\
+    &=6N|\beta|(d-1)|v|^2. \label{eq:H3}
+\end{align}
+
+Finally, using \eqref{eq:H2} and \eqref{eq:H3} in \eqref{eq:H1} gives
+\begin{align*}
+    |\hess_\schwartz(v,v)|&\leq \sum_{e,\widebar e} |(X_{\widebar e} Q_{\widebar e})(X_eQ_e) S|\\
+    &\leq \sum_{e=\widebar e\in E_L^+} |(X_{\widebar e} Q_{\widebar e})(X_eQ_e) S| + \sum_{e\neq \widebar e\in E_L^+} |(X_{\widebar e} Q_{\widebar e})(X_eQ_e) S|\\
+    &\leq 8N|\beta|(d-1)|v|^2.
+\end{align*}
+\end{proof}
+
+
+\bibliographystyle{plain}
+\bibliography{bibliography.bib}
+
+\end{document}
