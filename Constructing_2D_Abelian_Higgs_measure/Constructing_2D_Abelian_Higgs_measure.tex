@@ -1,0 +1,368 @@
+%%% --------------- DO NOT CHANGE THE FOLLOWING SECTION --------------------
+\documentclass[12pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usepackage{pgfplots}
+\usetikzlibrary{arrows.meta,calc,3d}
+\usepackage{fancyhdr}
+\usepackage{multirow, multicol}
+\usepackage{enumitem}
+\usepackage{tabu}
+\usepackage{hyperref}
+\usepackage{dsfont}
+\usepackage{mathrsfs}
+\usepackage{stmaryrd}
+\usepackage{mathtools}
+\usepackage{cancel}
+\usepackage{biblatex}
+
+\pgfplotsset{compat=1.17}
+\tdplotsetmaincoords{65}{110}
+
+\newtheorem{defn}{Definition}
+\newtheorem{theorem}{Theorem}
+\newtheorem{prop}{Proposition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corr}{Corollary}
+\newtheorem{remark}{Remark}
+\newtheorem{example}{Example}
+\newtheorem{assmptn}{Assumption}
+\theoremstyle{definition}
+\newtheorem*{notation}{Notation}
+\usepackage{comment}
+\newenvironment{solution}{
+  \textbf{Solution.}}{}
+\renewcommand*{\thefootnote}{\fnsymbol{footnote}\fnsymbol{footnote}}
+
+ \setlength{\headheight}{14.5pt}
+ \addtolength{\topmargin}{-2.5pt}
+
+
+%% ------------------ EXOTIC COMMANDS --------------------------------------
+
+%----------------- Widebar -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+%See https://tex.stackexchange.com/questions/16337/can-i-get-a-widebar-without-using-the-mathabx-package?noredirect=1&lq=1
+
+\makeatletter
+\let\save@mathaccent\mathaccent
+\newcommand*\if@single[3]{%
+  \setbox0\hbox{${\mathaccent"0362{#1}}^H$}%
+  \setbox2\hbox{${\mathaccent"0362{\kern0pt#1}}^H$}%
+  \ifdim\ht0=\ht2 #3\else #2\fi
+  }
+%The bar will be moved to the right by a half of \macc@kerna, which is computed by amsmath:
+\newcommand*\rel@kern[1]{\kern#1\dimexpr\macc@kerna}
+%If there's a superscript following the bar, then no negative kern may follow the bar;
+%an additional {} makes sure that the superscript is high enough in this case:
+\newcommand*\widebar[1]{\@ifnextchar^{{\wide@bar{#1}{0}}}{\wide@bar{#1}{1}}}
+%Use a separate algorithm for single symbols:
+\newcommand*\wide@bar[2]{\if@single{#1}{\wide@bar@{#1}{#2}{1}}{\wide@bar@{#1}{#2}{2}}}
+\newcommand*\wide@bar@[3]{%
+  \begingroup
+  \def\mathaccent##1##2{%
+%Enable nesting of accents:
+    \let\mathaccent\save@mathaccent
+%If there's more than a single symbol, use the first character instead (see below):
+    \if#32 \let\macc@nucleus\first@char \fi
+%Determine the italic correction:
+    \setbox\z@\hbox{$\macc@style{\macc@nucleus}_{}$}%
+    \setbox\tw@\hbox{$\macc@style{\macc@nucleus}{}_{}$}%
+    \dimen@\wd\tw@
+    \advance\dimen@-\wd\z@
+%Now \dimen@ is the italic correction of the symbol.
+    \divide\dimen@ 3
+    \@tempdima\wd\tw@
+    \advance\@tempdima-\scriptspace
+%Now \@tempdima is the width of the symbol.
+    \divide\@tempdima 10
+    \advance\dimen@-\@tempdima
+%Now \dimen@ = (italic correction / 3) - (Breite / 10)
+    \ifdim\dimen@>\z@ \dimen@0pt\fi
+%The bar will be shortened in the case \dimen@<0 !
+    \rel@kern{0.6}\kern-\dimen@
+    \if#31
+      \overline{\rel@kern{-0.6}\kern\dimen@\macc@nucleus\rel@kern{0.4}\kern\dimen@}%
+      \advance\dimen@0.4\dimexpr\macc@kerna
+%Place the combined final kern (-\dimen@) if it is >0 or if a superscript follows:
+      \let\final@kern#2%
+      \ifdim\dimen@<\z@ \let\final@kern1\fi
+      \if\final@kern1 \kern-\dimen@\fi
+    \else
+      \overline{\rel@kern{-0.6}\kern\dimen@#1}%
+    \fi
+  }%
+  \macc@depth\@ne
+  \let\math@bgroup\@empty \let\math@egroup\macc@set@skewchar
+  \mathsurround\z@ \frozen@everymath{\mathgroup\macc@group\relax}%
+  \macc@set@skewchar\relax
+  \let\mathaccentV\macc@nested@a
+%The following initialises \macc@kerna and calls \mathaccent:
+  \if#31
+    \macc@nested@a\relax111{#1}%
+  \else
+%If the argument consists of more than one symbol, and if the first token is
+%a letter, use that letter for the computations:
+    \def\gobble@till@marker##1\endmarker{}%
+    \futurelet\first@char\gobble@till@marker#1\endmarker
+    \ifcat\noexpand\first@char A\else
+      \def\first@char{}%
+    \fi
+    \macc@nested@a\relax111{\first@char}%
+  \fi
+  \endgroup
+}
+\makeatother
+\newcommand\test[1]{%
+$#1{M}$ $#1{A}$ $#1{g}$ $#1{\beta}$ $#1{\mathcal A}^q$
+$#1{AB}^\sigma$ $#1{H}^C$ $#1{\sin z}$ $#1{W}_n$}
+
+
+%------------------------ Laplace Transform --------------------------------
+%See https://tex.stackexchange.com/questions/239791/is-this-laplace-transform-symbol-available-in-latex
+
+\newsavebox\foobox
+\newlength{\foodim}
+\newcommand{\slantbox}[2][0]{\mbox{%
+        \sbox{\foobox}{#2}%
+        \foodim=#1\wd\foobox
+        \hskip \wd\foobox
+        \hskip -0.5\foodim
+        \pdfsave
+        \pdfsetmatrix{1 0 #1 1}%
+        \llap{\usebox{\foobox}}%
+        \pdfrestore
+        \hskip 0.5\foodim
+}}
+\def\Ell{\slantbox[-.45]{$\mathscr{L}$}}
+
+%% -------------------------------------------------------------------------
+
+%% ------------------------ FORMAT -----------------------------------------
+
+\parindent 0pt
+\parskip 10pt
+
+\setcounter{section}{-1}
+\pagestyle{fancy}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+    }
+    
+% Title
+    \title{Integral Calculus over Millenia}
+    \date{}
+    \author{Ansh S.}
+    \addbibresource{bibliography.bib}
+
+% \fancyhead[RO]{MATH-UA 377 Fall 2022}
+\fancyhead[RO]{Integral Calculus over Millenia}
+\fancyhead[LO]{}
+\newenvironment{problems}
+{\begin{enumerate}[itemsep=30pt]}
+  {\end{enumerate}}
+\newenvironment{parts}
+{\begin{enumerate}[topsep=10pt,itemsep=20pt,label*=\arabic*.]}
+  {\end{enumerate}}
+
+
+\begin{document}
+\maketitle
+
+%% -------------------------------------------------------------------------
+
+%%% -------END OF SECTION THAT MUST BE LEFT UNCHANGED ----------------------
+
+
+%%% ------------------- SHORTCUTS ------------------------------------------
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\T}{\mathbb{T}}
+\newcommand{\Rtilde}{\widetilde{\R}}
+\newcommand{\Rvec}{\widehat{\R}}
+\newcommand{\id}{\mathds{1}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\B}{\mathcal{B}}
+\newcommand{\power}{\mathcal{P}}
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\state}{\mathcal{S}}
+\newcommand{\dynkin}{\mathcal{D}}
+\newcommand{\A}{\mathcal{A}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\cl}{\mathcal{C}}
+\newcommand{\E}{\mathcal{E}}
+\newcommand{\g}{\mathfrak{g}}
+\newcommand{\no}{\textbf}
+\newcommand{\problem}[1]{\textbf{Problem #1}}
+
+\newcommand{\p}{\mathbb{P}}
+\newcommand{\e}{\mathbb{E}}
+\newcommand{\var}{\operatorname{Var}}
+\newcommand{\cov}{\operatorname{Cov}}
+\newcommand{\D}{\operatorname{{\bf D}}}
+\newcommand{\gauge}{\mathcal{G}}
+
+\newcommand{\proj}{\operatorname{proj}}
+\newcommand{\im}{\operatorname{im}}
+\newcommand{\tr}{\operatorname{Tr}}
+\newcommand{\ric}{\operatorname{Ric}}
+\newcommand{\hess}{\operatorname{Hess}}
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+%\overset{(d)}{\longrightarrow}
+
+%%% ------------------------------------------------------------------------
+
+\section{Summary}
+
+Bringmann and Cao consider the following Stochastic Abelian-Higgs SPDE:
+\begin{align}\label{eq:ym}
+    \begin{cases}
+        \partial_t  A &= -\D^*_A F_A -B(\D_A\phi,\phi) + \xi\\
+        \partial_t\phi &= -\D_A^*\D_A \phi -|\phi|^{q-1}\phi +\zeta
+    \end{cases}
+\end{align}
+where
+\begin{align*}
+    A&: [0,\infty)\times\T^2\rightarrow \R^2\\
+    \phi&: [0,\infty)\times\T^2\rightarrow\C\\
+    B&: \C\times\C\rightarrow\R \text{ a certain bi-linear map}\\
+    \D_A&: \text{ covariant derivative}\\
+    F_A&: \text{ curvature tensor}\\
+    \xi,\,\zeta&: \text{ space-time white noise}\\
+    q&\geq 3 \text{ an odd integer}.
+\end{align*}
+
+Momentarily, so that everything is well defined, consider the following {\it smooth state-space} for $(A,\phi)$ at fixed time:
+\begin{align}\label{eq:state}
+    \state:= C^\infty(\T^2\rightarrow \R^2)\times C^\infty(\T^2\rightarrow \C).
+\end{align}
+The {\it group of gauge transformations} is given by
+\begin{align}
+    \gauge:= \{ g\in C^\infty(\R^2\rightarrow \R) : \nabla g \text{ and } e^{-ig} \text{ are periodic} \},
+\end{align}
+which is an additive group with addition defined pointwise.
+
+Now $\gauge$ defines a group action on $\state$ defined by
+\begin{align}\label{eq:action}
+    (A,\phi)\mapsto (A^g,\phi^g):= (A+\nabla g, e^{-ig}\phi).
+\end{align}
+The physical system under consideration can be in any state $(A,\phi)$. It turns out that all observables of this physical system remain invariant under action of $\gauge$ on the state.
+That is, for any state $(A,\phi)$, all elements of the gauge orbit $\{(A^g,\phi^g): g\in\gauge\}$ are physically indistinguishable.
+Therefore, the group action given by \eqref{eq:action} is also called the {\it gauge symmetry} of the physical system, and we call any two states in the same gauge orbit {\it gauge equivalent}.
+
+For example, the energy of the system in state $(A,\phi)$ is given by
+\begin{align}\label{eq:energy}
+    E(A,\phi):= \int_{\T^2} \left( \frac{|F_A|^2}{4} + \frac{|\D_A\phi|^2}{2} + \frac{|\phi|^{q+1}}{q+1} \right).
+\end{align}
+To understand energy, $\forall (A,\phi)\in\state$, we first define the covariant derivatives $(\D_A^j\phi)_{1\leq j\leq 2}$ and curvature tensor $(F_A^{jk})_{1\leq j,k\leq 2}$ by
+\begin{align}
+    \D_A^j\phi &:= \partial^j\phi + iA^j\phi,\\
+    F_A^{jk} &:= \partial^j A^k - \partial^k A^j.
+\end{align}
+Now in \eqref{eq:energy}, $|F_A|^2 = F_{A, jk} F_A^{jk}$ and $|\D_A\phi|^2 = \widebar{\D_{A,j}\phi}\D_A^j\phi$ where we follow the Einstein summation convention.
+For any $g\in\gauge, (A,\phi)\in\state$, it then follows that
+\begin{align*}
+    \D_{A^g}^j\phi^g
+    &= \partial^j\phi^g + i A^{g,j}\phi^g\\
+    &= \partial^j(e^{-ig}\phi) + i(A^j+\partial^j g)e^{-ig}\phi\\
+    &= e^{-ig}\partial^j\phi -\cancel{ie^{-ig}\partial^j g  \phi} + \cancel{i e^{-ig}\partial^j g \phi} + ie^{-ig}A^j\phi\\
+    &= e^{-ig}[\partial^j\phi + iA^j\phi]\\
+    &=e^{-ig}\D_A^j \phi\\
+    &= (\D_A^j \phi)^g.
+\end{align*}
+This gives $\widebar{\D_{A^g,j}\phi^g}=(\widebar{\D_{A,j}\phi})^{-g}$, and hence $|\D_{A^g}\phi^g|^2=|\D_A\phi|^2$. Also,
+\begin{align*}
+    F^{j,k}_{A^g}
+    &= \partial^j A^{g,k} - \partial^k A^{g,j}\\
+    &=\partial^j A^k - \partial^k A^j + \partial^j \partial^k g - \partial^k \partial^j g\\
+    &= F^{j,k}_A
+\end{align*}
+which readily implies $|F_{A^g}|^2=|F_A|^2$. Also, trivially, $|\phi^g|^{q-1}=|\phi|^{q-1}$. Thus we find that
+\begin{align}
+    \forall g\in\gauge, (A,\phi)\in \state,\, E(A^g,\phi^g)=E(A,\phi).
+\end{align}
+
+Therefore, it's advantageous to fix a gauge orbit representative in the state space which makes computations the easiest, since the physics doesn't change.
+For the purposes of analysing \eqref{eq:ym}, the Coulomb gauge is particularly effective. It sets
+\begin{align}\label{eq:coulomb}
+    \partial_j A^j = 0
+\end{align}
+For this choice to be allowed, there must be a unique element in every gauge orbit satisfying \eqref{eq:coulomb}.
+For any $A$, we have that $\partial_j A^{g,j} = \partial_j ( A^j + \partial^j g ) = \partial_j A^j + \Delta g$, and thus we reduce to finding $g:\R^2\rightarrow\R$ such that $\nabla g, e^{-ig}$ are periodic and
+\begin{align*}
+    \Delta g = -\nabla\cdot A.
+\end{align*}
+This is the Poisson equation. Restricting $g$ to the torus: $g|_{\T^2}$, we see that it will satisfy the above equation iff $\int_{\T^2} -\nabla\cdot A(x)\,dx = 0$, which is always the case by the Divergence theorem.
+Next we can extend the solution on the torus $g|_{\T^2}$ periodically to $g:\R^2\rightarrow\R$. Then, $\nabla g$ and $e^{-ig}$ will also be automatically periodic.\\
+However, this choice of $g$ is not unique -- $g+h:\R^2\rightarrow\R$ will satisfy the same conditions as long as $\Delta h = 0$ and $\nabla h, e^{-ih}$ are periodic. The following satisfies these properties:
+\begin{align}
+    \forall n\in\Z^2 \text{ set } h_n(x) = n\cdot x.
+\end{align}
+In fact, this basically classifies such $h$. To see this, note that $h$ harmonic $\implies \partial^j h$ harmonic, which is also periodic, and therefore by Liouville's theorem $\partial^j h$ must be a constant. Thus $h(x)=a\cdot x+b$ where $a\in\R^2, b\in\R$.
+Next we need $e^{ih(x)}=e^{i(a\cdot x+b)}$ to be periodic, which forces $a\in\Z^2$. Thus any such $h:\R^2\rightarrow\R$ will be of the form $n\cdot x+b;\, n\in\Z^2, b\in\R$.\\
+Summarily, each gauge orbit has infinitely many states satisfying the Coulomb gauge condition. For such a state $(A,\phi)$, these states are precisely given by $(A^h, \phi^h)$ where $h=n\cdot x+b$.
+Since the constant term in $h$ only affects the state by multiplying $\phi$ by a constant, we ignore it. The remaining $h$ then form a subgroup which can then be identified with $\Z^2$:
+\begin{align}
+    (A,\phi)\mapsto (A^h,\phi^h)=(A+n, e^{-in\cdot x}\phi).
+\end{align}
+The freedom left in choosing representatives of gauge orbits after imposing a condition is called {\it gauge freedom}. If the condition is stringent enough to identify a unique representative (i.e., removing any gauge freedom), we call the process {\it gauge fixing}.
+In the above context, clearly the gauge freedom is discrete and finite dimensional. The former makes it hard to remove it by imposing a further condition, and the latter means it won't be that hard to control the norms we will need for showing well-posedness of \eqref{eq:ym}
+in each dimension of the gauge freedom. This is accomplished by considering {\it gauge invariant norms} defined below.
+
+Under the Coulomb gauge condition, the non-linearity in \eqref{eq:ym} exhibits a {\it null structure} which makes the analysis easier.
+We modify our state space to always satisfy the Coulomb gauge condition:
+\begin{align}\label{eq:statec}
+    \state_C:= \{ (A,\phi)\in\state: \partial_j A^j = 0\}.
+\end{align}
+The equation now reads:
+\begin{align}\label{eq:sah}
+    \begin{cases}
+        \partial_t A &= \Delta A - P_\perp\Im(\widebar{\phi}\D_A\phi) + P_\perp\xi\\
+        \partial_t\phi&= \D_A^j\D_{A,j} \phi -|\phi|^{q-1}q +\zeta
+    \end{cases}.
+\end{align}
+
+As stated above, \eqref{eq:sah} is hard to make sense of due to the low spatial regularity white noise terms. Therefore, we consider a smoothened version of the equation as follows:
+\begin{align}\label{eq:sahn}
+    \begin{cases}
+        \partial_t A_{\leq N} &= \Delta A_{\leq N} -P_\perp\Im(\widebar{\phi_{\leq N}}\D_{A_{\leq N}}\phi_{\leq N}) + C_g A_{\leq N} +P_\perp\xi_{\leq N}\\
+        \partial_t\phi_{\leq N} &= \Big(\D_{A_{\leq N}}^j \D_{A_{\leq N}, j} +2\sigma_{\leq N}^2\Big)\phi_{\leq N} - :|\phi_{\leq N}|^{q-1}\phi: +\zeta_{\leq N}
+    \end{cases},
+\end{align}
+where $A_{\leq N}$ and $\phi_{\leq N}$ will be solutions corresponding to the smoothened out noise.
+The renormalization term $c_g A_{\leq N}$ (with $C_g=\frac{1}{8\pi}$) is added to make the limiting solution under $N$ {\it gauge covariant} under the discrete gauge transformation \eqref{eq:statec}; it cancels a resonance in the derivative non-linearity.
+The other renormalization therm $2\sigma_{\leq N}^2\phi_{\leq N}$ has been added to make the solution finite.
+The wick-ordered non-linearity $:|\phi_{\leq N}|^{q-1}\phi_{\leq N}:$ is considered so that the products make sense even at low regularities.
+
+\newpage
+
+The covariant derivatives, unlike the regular derivatives, are non-commutative. From the above definitions, this can be seen as follows:
+\begin{align*}
+    (\D_A^j\D_A^k - \D_A^k\D_A^j)\phi
+    &= \D_A^j (\partial^k\phi + iA^k\phi) - \D_A^k(\partial^j\phi + iA^j\phi)\\
+    &= \cancel{\partial^j\partial^k \phi} +iA^j\partial^k\phi + i\partial^j (A^k\phi) - \cancel{A^jA^k\phi}\\
+    &\,-\cancel{\partial^k\partial^j\phi} -i A^k\partial^j\phi -i\partial^k (A^j\phi) + \cancel{A^kA^j\phi}
+    \intertext{where the terms $\partial^j\partial^k\phi - \partial^k\partial^j \phi$ cancel off by interchanging order of derivatives, and the terms $-A^jA^k\phi + A^kA^j\phi$ cancel off since these are scalar functions that commute.}
+    &= i\partial^j(A^k\phi) - iA^k\partial^j\phi\\
+    &\, -[i\partial^k(A^j\phi) - iA^j\partial^k\phi]
+    \intertext{which simplifies using chain rule:}
+    &= i[\partial^j A^k-\partial^kA^j]\phi\\
+    &= iF_A^{jk}\phi.
+\end{align*}
+From this calculation it follows that the curvature tensor captures the non-commutativity of the covariant derivatives.
+
+\end{document}
